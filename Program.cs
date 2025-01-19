@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using static Lekcia12_cvicenie.JsonDeserializace;
+﻿using Lekcia12_Cvicenie;
 
 namespace Lekcia12_cvicenie
 {
@@ -8,66 +7,28 @@ namespace Lekcia12_cvicenie
 
         private static async Task Main(string[] args)
         {
-            await PublicWeatherAPI();
-        }
-
-        private static async Task PublicWeatherAPI()
-        {
-            const string apiKey = "1e938ad66b7a466badd61544250101";
-            const string location = "Bratislava";
-            const int days = 10;
-            string apiUrl = $"http://api.weatherapi.com/v1/forecast.json?key={apiKey}&q={location}&days={days}&aqi=no&alerts=no&lang=sk";
-
-            Console.WriteLine("Sťahujem údaje z WeatherAPI ...");
-            var weatherData = await FetchWeatherData(apiUrl);
-
-            if (weatherData != null)
             {
-                Console.WriteLine("Spracovávam údaje...");
-                ProcessWeatherData(weatherData);
-            }
-            else
-            {
-                Console.WriteLine("Nepodarilo sa získať údaje.");
-            }
-        }
+                const string apiKey = "1e938ad66b7a466badd61544250101";
+                const string location = "Bratislava";
+                const int days = 10;
 
-        private static async Task<WeatherData> FetchWeatherData(string url)
-        {
-            using HttpClient client = new HttpClient();
+                string apiUrl = $"http://api.weatherapi.com/v1/forecast.json?key={apiKey}&q={location}&days={days}&aqi=no&alerts=no&lang=sk";
 
-            try
-            {
-                var response = await client.GetStringAsync(url);
-                return JsonSerializer.Deserialize<WeatherData>(response);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Chyba pri sťahovaní údajov: {e.Message}");
-                return null;
-            }
-        }
+                var apiClient = new WeatherApiClient();
+                var weatherService = new WeatherService();
 
-        public static void ProcessWeatherData(WeatherData weatherData)
-        {
-            // Aktuálne počasie
-            Console.WriteLine("Aktuálne počasie:");
-            Console.WriteLine($"Mesto: {weatherData.Location.Name}");
-            Console.WriteLine($"Krajina: {weatherData.Location.Country}");
-            Console.WriteLine($"Teplota: {weatherData.Current.TempC}°C");
-            Console.WriteLine($"Podmienky: {weatherData.Current.Condition.Text}");
-            Console.WriteLine($"Vietor: {weatherData.Current.WindKph} km/h");
+                try
+                {
+                    Console.WriteLine("Sťahujem údaje z WeatherAPI...");
+                    var weatherData = await apiClient.FetchWeatherData(apiUrl);
 
-            // Predpoveď počasia
-            Console.WriteLine("\nPredpoveď počasia:");
-            foreach (var day in weatherData.Forecast.ForecastDay)
-            {
-                string formattedDate = DateTime.Parse(day.Date).ToString("dd.MM.yyyy");
-                Console.WriteLine($"Dátum: {formattedDate}");
-                Console.WriteLine($"  Max teplota: {day.Day.MaxTempC}°C");
-                Console.WriteLine($"  Min teplota: {day.Day.MinTempC}°C");
-                Console.WriteLine($"  Podmienky: {day.Day.Condition.Text}");
-                Console.WriteLine($"  Pravdepodobnosť dažďa: {day.Day.DailyChanceOfRain}%\n");
+                    Console.WriteLine("Spracovávam údaje...");
+                    weatherService.ProcessWeatherData(weatherData);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Vyskytla sa chyba: {ex.Message}");
+                }
             }
         }
     }
